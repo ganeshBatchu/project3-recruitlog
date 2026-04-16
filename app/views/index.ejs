@@ -1,0 +1,53 @@
+<%- include('layout/header') %>
+
+<div class="text-center mb-5">
+  <h1 class="display-4">Recruit.log</h1>
+  <p class="lead text-muted">CS3200 Project 3 — Node + Express + Redis In-Memory Layer</p>
+</div>
+
+<div class="row g-4 mb-5">
+  <div class="col-md-4">
+    <div class="card text-center p-4 h-100">
+      <h5 class="mb-2">Advisor Bookmarks</h5>
+      <p class="text-muted small">Sorted Set per advisor storing bookmarked listing IDs ranked by timestamp.</p>
+      <code class="d-block mb-3 text-danger">advisor:{id}:bookmarks</code>
+      <a href="/advisors" class="btn btn-dark btn-sm mt-auto">Open</a>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-center p-4 h-100">
+      <h5 class="mb-2">Recent Views</h5>
+      <p class="text-muted small">Sorted Set per advisor storing the 50 most recently viewed listing IDs.</p>
+      <code class="d-block mb-3 text-danger">advisor:{id}:recentViews</code>
+      <a href="/advisors" class="btn btn-dark btn-sm mt-auto">Open</a>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-center p-4 h-100">
+      <h5 class="mb-2">Listing Stats</h5>
+      <p class="text-muted small">Hash per listing caching applicationCount, bookmarkCount, and lastUpdated.</p>
+      <code class="d-block mb-3 text-danger">listing:{id}:stats</code>
+      <a href="/listings/stats" class="btn btn-dark btn-sm mt-auto">Open</a>
+    </div>
+  </div>
+</div>
+
+<div class="card p-4">
+  <h6 class="mb-3">Advisors</h6>
+  <div class="list-group list-group-flush">
+    <% advisors.forEach(a => { %>
+    <div class="list-group-item d-flex justify-content-between align-items-center">
+      <div>
+        <strong><%= a.name %></strong>
+        <span class="text-muted ms-2 small"><%= a.role %> — <%= a.institution %></span>
+      </div>
+      <div>
+        <a href="/advisors/<%= a.id %>/bookmarks" class="btn btn-sm btn-outline-dark me-1">Bookmarks</a>
+        <a href="/advisors/<%= a.id %>/recent-views" class="btn btn-sm btn-outline-secondary">Recent Views</a>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+</div>
+
+<%- include('layout/footer') %>

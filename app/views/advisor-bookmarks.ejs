@@ -1,0 +1,84 @@
+<%- include('layout/header') %>
+
+<div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <h2 class="mb-1"><%= advisor.name %> — Bookmarks</h2>
+    <p class="text-muted small mb-0">
+      Redis key: <code class="text-danger">advisor:<%= advisor.id %>:bookmarks</code> &nbsp;|&nbsp;
+      Type: <strong>Sorted Set</strong> &nbsp;|&nbsp; member = listingId, score = timestamp (ms)
+    </p>
+  </div>
+  <a href="/advisors" class="btn btn-sm btn-outline-secondary">Back</a>
+</div>
+
+<!-- CREATE -->
+<div class="card p-4 mb-4">
+  <h6 class="mb-1">Add Bookmark</h6>
+  <p class="text-muted small mb-3">Redis: <code>ZADD advisor:<%= advisor.id %>:bookmarks {now} {listingId}</code></p>
+  <form action="/advisors/<%= advisor.id %>/bookmarks" method="POST" class="row g-2 align-items-end">
+    <div class="col-md-8">
+      <select name="listingId" class="form-select form-select-sm" required>
+        <option value="">Choose a listing...</option>
+        <% listings.forEach(l => { %>
+        <option value="<%= l.id %>"><%= l.id %> — <%= l.title %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <button type="submit" class="btn btn-dark btn-sm w-100">Add Bookmark</button>
+    </div>
+  </form>
+</div>
+
+<!-- READ -->
+<% if (bookmarks.length === 0) { %>
+<div class="alert alert-secondary">No bookmarks yet. Add one above.</div>
+<% } else { %>
+<div class="card">
+  <table class="table table-hover mb-0">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Listing ID</th>
+        <th>Title</th>
+        <th>Bookmarked At</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% bookmarks.forEach((b, i) => {
+           const meta = listings.find(l => l.id === b.listingId);
+      %>
+      <tr>
+        <td class="text-muted"><%= i + 1 %></td>
+        <td><code><%= b.listingId %></code></td>
+        <td class="small"><%= meta ? meta.title : '—' %></td>
+        <td class="score-muted"><%= b.bookmarkedAt %></td>
+        <td>
+          <!-- UPDATE: ZADD XX to refresh timestamp -->
+          <form action="/advisors/<%= advisor.id %>/bookmarks/<%= b.listingId %>/refresh" method="POST" class="d-inline">
+            <button type="submit" class="btn btn-sm btn-outline-secondary" title="ZADD XX — refresh timestamp">Refresh</button>
+          </form>
+          <!-- DELETE: ZREM -->
+          <form action="/advisors/<%= advisor.id %>/bookmarks/<%= b.listingId %>?_method=DELETE" method="POST" class="d-inline ms-1"
+            onsubmit="return confirm('Remove bookmark for <%= b.listingId %>?')">
+            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+          </form>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<% } %>
+
+<div class="mt-4 p-3 bg-light rounded small text-muted">
+  <strong>Redis commands on this page:</strong><br>
+  <code>ZREVRANGE advisor:<%= advisor.id %>:bookmarks 0 -1 WITHSCORES</code> — read all, newest first<br>
+  <code>ZADD advisor:<%= advisor.id %>:bookmarks {score} {listingId}</code> — add bookmark<br>
+  <code>ZADD advisor:<%= advisor.id %>:bookmarks XX {score} {listingId}</code> — update timestamp only<br>
+  <code>ZREM advisor:<%= advisor.id %>:bookmarks {listingId}</code> — remove bookmark<br>
+  <code>ZSCORE advisor:<%= advisor.id %>:bookmarks {listingId}</code> — check membership
+</div>
+
+<%- include('layout/footer') %>

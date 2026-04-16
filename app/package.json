@@ -1,0 +1,19 @@
+{
+  "name": "recruit-log-redis",
+  "version": "1.0.0",
+  "description": "Recruit.log — Node + Express + Redis In-Memory Application",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.21.0",
+    "method-override": "^3.0.0",
+    "redis": "^4.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

@@ -1,0 +1,87 @@
+<%- include('layout/header') %>
+
+<div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <h2 class="mb-1">Listing Stats</h2>
+    <p class="text-muted small mb-0">Redis Hash keys — <code class="text-danger">listing:{id}:stats</code></p>
+  </div>
+</div>
+
+<!-- CREATE -->
+<div class="card p-4 mb-4">
+  <h6 class="mb-1">Initialize Listing Stats</h6>
+  <p class="text-muted small mb-3">Redis: <code>HSET listing:{id}:stats applicationCount X bookmarkCount Y lastUpdated Z</code></p>
+  <form action="/listings/stats" method="POST" class="row g-2 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label small text-muted">Listing</label>
+      <select name="listingId" class="form-select form-select-sm" required>
+        <option value="">Choose...</option>
+        <% listings.forEach(l => { %>
+        <option value="<%= l.id %>"><%= l.id %> — <%= l.title %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small text-muted">Applications</label>
+      <input type="number" name="applicationCount" class="form-control form-control-sm" value="0" min="0">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small text-muted">Bookmarks</label>
+      <input type="number" name="bookmarkCount" class="form-control form-control-sm" value="0" min="0">
+    </div>
+    <div class="col-md-4">
+      <button type="submit" class="btn btn-dark btn-sm w-100">Create / Overwrite</button>
+    </div>
+  </form>
+</div>
+
+<!-- READ -->
+<% if (stats.length === 0) { %>
+<div class="alert alert-secondary">No stats found. Create one above.</div>
+<% } else { %>
+<div class="card">
+  <table class="table table-hover mb-0">
+    <thead class="table-light">
+      <tr>
+        <th>Listing ID</th>
+        <th>Title</th>
+        <th>Applications</th>
+        <th>Bookmarks</th>
+        <th>Last Updated</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% stats.forEach(s => { %>
+      <tr>
+        <td><code><%= s.id %></code></td>
+        <td class="small"><%= s.meta ? s.meta.title : '—' %></td>
+        <td><%= s.data.applicationCount || 0 %></td>
+        <td><%= s.data.bookmarkCount || 0 %></td>
+        <td class="score-muted small">
+          <%= s.data.lastUpdated ? new Date(parseInt(s.data.lastUpdated)).toLocaleString() : '—' %>
+        </td>
+        <td>
+          <a href="/listings/<%= s.id %>/stats" class="btn btn-sm btn-outline-dark me-1">Detail</a>
+          <!-- DELETE: DEL key -->
+          <form action="/listings/<%= s.id %>/stats?_method=DELETE" method="POST" class="d-inline"
+            onsubmit="return confirm('Delete stats for <%= s.id %>?')">
+            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<% } %>
+
+<div class="mt-4 p-3 bg-light rounded small text-muted">
+  <strong>Redis commands on this page:</strong><br>
+  <code>KEYS listing:*:stats</code> — discover all stats keys<br>
+  <code>HGETALL listing:{id}:stats</code> — read all fields per listing<br>
+  <code>HSET listing:{id}:stats applicationCount X bookmarkCount Y lastUpdated Z</code> — create/overwrite<br>
+  <code>DEL listing:{id}:stats</code> — delete
+</div>
+
+<%- include('layout/footer') %>

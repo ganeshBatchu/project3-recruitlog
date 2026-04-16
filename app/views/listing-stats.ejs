@@ -1,0 +1,90 @@
+<%- include('layout/header') %>
+
+<div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <h2 class="mb-1">Stats — <code><%= listingId %></code></h2>
+    <p class="text-muted small mb-0">
+      Redis key: <code class="text-danger">listing:<%= listingId %>:stats</code> &nbsp;|&nbsp;
+      Type: <strong>Hash</strong>
+    </p>
+  </div>
+  <a href="/listings/stats" class="btn btn-sm btn-outline-secondary">Back</a>
+</div>
+
+<% if (!stats || Object.keys(stats).length === 0) { %>
+<div class="alert alert-warning">
+  No stats found for <code><%= listingId %></code>.
+  <a href="/listings/stats">Initialize stats here.</a>
+</div>
+<% } else { %>
+
+<!-- READ counters -->
+<div class="row g-4 mb-4">
+  <div class="col-md-4">
+    <div class="card text-center p-4">
+      <h2 class="display-5"><%= stats.applicationCount || 0 %></h2>
+      <p class="text-muted mb-3">Applications</p>
+      <!-- UPDATE: HINCRBY applicationCount 1 -->
+      <form action="/listings/<%= listingId %>/stats/increment" method="POST">
+        <input type="hidden" name="field" value="applicationCount">
+        <button type="submit" class="btn btn-sm btn-outline-dark">+1 (HINCRBY)</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-center p-4">
+      <h2 class="display-5"><%= stats.bookmarkCount || 0 %></h2>
+      <p class="text-muted mb-3">Bookmarks</p>
+      <!-- UPDATE: HINCRBY bookmarkCount 1 -->
+      <form action="/listings/<%= listingId %>/stats/increment" method="POST">
+        <input type="hidden" name="field" value="bookmarkCount">
+        <button type="submit" class="btn btn-sm btn-outline-dark">+1 (HINCRBY)</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-center p-4">
+      <p class="h5 mb-1"><%= lastUpdated %></p>
+      <p class="text-muted mb-0 small">Last Updated</p>
+    </div>
+  </div>
+</div>
+
+<!-- Raw hash fields -->
+<div class="card p-4 mb-4">
+  <h6 class="mb-3">Raw Hash Fields <span class="text-muted small fw-normal">(HGETALL)</span></h6>
+  <table class="table table-sm mb-0">
+    <thead class="table-light"><tr><th>Field</th><th>Value</th></tr></thead>
+    <tbody>
+      <% Object.entries(stats).forEach(([field, value]) => { %>
+      <tr><td><code><%= field %></code></td><td><%= value %></td></tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<% if (meta) { %>
+<div class="card p-3 mb-4 bg-light">
+  <p class="mb-1 small"><strong>Listing:</strong> <%= meta.title %></p>
+  <p class="mb-0 small text-muted"><strong>Company:</strong> <%= meta.company %></p>
+</div>
+<% } %>
+
+<!-- DELETE: DEL key -->
+<form action="/listings/<%= listingId %>/stats?_method=DELETE" method="POST"
+  onsubmit="return confirm('Delete all stats for <%= listingId %>?')">
+  <button type="submit" class="btn btn-danger btn-sm">Delete Stats (DEL)</button>
+</form>
+<% } %>
+
+<div class="mt-4 p-3 bg-light rounded small text-muted">
+  <strong>Redis commands on this page:</strong><br>
+  <code>HGETALL listing:<%= listingId %>:stats</code> — read all fields<br>
+  <code>HGET listing:<%= listingId %>:stats applicationCount</code> — read one field<br>
+  <code>HINCRBY listing:<%= listingId %>:stats applicationCount 1</code> — increment applications<br>
+  <code>HINCRBY listing:<%= listingId %>:stats bookmarkCount 1</code> — increment bookmarks<br>
+  <code>HSET listing:<%= listingId %>:stats lastUpdated {ts}</code> — update timestamp<br>
+  <code>DEL listing:<%= listingId %>:stats</code> — delete all stats
+</div>
+
+<%- include('layout/footer') %>

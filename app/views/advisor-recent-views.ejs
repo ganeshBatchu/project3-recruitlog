@@ -1,0 +1,88 @@
+<%- include('layout/header') %>
+
+<div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <h2 class="mb-1"><%= advisor.name %> — Recent Views</h2>
+    <p class="text-muted small mb-0">
+      Redis key: <code class="text-danger">advisor:<%= advisor.id %>:recentViews</code> &nbsp;|&nbsp;
+      Type: <strong>Sorted Set</strong> &nbsp;|&nbsp; member = listingId, score = timestamp (top 50)
+    </p>
+  </div>
+  <a href="/advisors" class="btn btn-sm btn-outline-secondary">Back</a>
+</div>
+
+<!-- CREATE / UPDATE -->
+<div class="card p-4 mb-4">
+  <h6 class="mb-1">Record a View</h6>
+  <p class="text-muted small mb-3">Redis: <code>ZADD advisor:<%= advisor.id %>:recentViews {now} {listingId}</code> — upserts score if listing already present</p>
+  <form action="/advisors/<%= advisor.id %>/recent-views" method="POST" class="row g-2 align-items-end">
+    <div class="col-md-8">
+      <select name="listingId" class="form-select form-select-sm" required>
+        <option value="">Choose a listing...</option>
+        <% listings.forEach(l => { %>
+        <option value="<%= l.id %>"><%= l.id %> — <%= l.title %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <button type="submit" class="btn btn-dark btn-sm w-100">Record View</button>
+    </div>
+  </form>
+</div>
+
+<!-- READ -->
+<% if (views.length === 0) { %>
+<div class="alert alert-secondary">No recent views yet. Record one above.</div>
+<% } else { %>
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <span class="text-muted small"><%= views.length %> listing(s) in history</span>
+  <!-- DELETE ALL: DEL key -->
+  <form action="/advisors/<%= advisor.id %>/recent-views?_method=DELETE" method="POST"
+    onsubmit="return confirm('Clear all recent views for this advisor?')">
+    <button type="submit" class="btn btn-sm btn-outline-danger">Clear All History (DEL)</button>
+  </form>
+</div>
+<div class="card">
+  <table class="table table-hover mb-0">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Listing ID</th>
+        <th>Title</th>
+        <th>Last Viewed</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% views.forEach((v, i) => {
+           const meta = listings.find(l => l.id === v.listingId);
+      %>
+      <tr>
+        <td class="text-muted"><%= i + 1 %></td>
+        <td><code><%= v.listingId %></code></td>
+        <td class="small"><%= meta ? meta.title : '—' %></td>
+        <td class="score-muted"><%= v.viewedAt %></td>
+        <td>
+          <!-- DELETE single: ZREM -->
+          <form action="/advisors/<%= advisor.id %>/recent-views/<%= v.listingId %>?_method=DELETE" method="POST" class="d-inline"
+            onsubmit="return confirm('Remove <%= v.listingId %> from history?')">
+            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+          </form>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<% } %>
+
+<div class="mt-4 p-3 bg-light rounded small text-muted">
+  <strong>Redis commands on this page:</strong><br>
+  <code>ZREVRANGE advisor:<%= advisor.id %>:recentViews 0 49 WITHSCORES</code> — read top 50, newest first<br>
+  <code>ZADD advisor:<%= advisor.id %>:recentViews {score} {listingId}</code> — record / re-record view<br>
+  <code>ZREMRANGEBYRANK advisor:<%= advisor.id %>:recentViews 0 -51</code> — trim to 50 entries<br>
+  <code>ZREM advisor:<%= advisor.id %>:recentViews {listingId}</code> — remove single entry<br>
+  <code>DEL advisor:<%= advisor.id %>:recentViews</code> — clear full history
+</div>
+
+<%- include('layout/footer') %>

@@ -1,0 +1,22 @@
+<%- include('layout/header') %>
+
+<h2 class="mb-4">Advisors</h2>
+
+<div class="row g-4">
+  <% advisors.forEach(a => { %>
+  <div class="col-md-4">
+    <div class="card p-4 h-100">
+      <h5 class="card-title mb-1"><%= a.name %></h5>
+      <p class="text-muted small mb-1"><%= a.role %></p>
+      <p class="text-muted small mb-3"><%= a.institution %></p>
+      <code class="small d-block mb-3"><%= a.id %></code>
+      <div class="d-flex gap-2 flex-wrap mt-auto">
+        <a href="/advisors/<%= a.id %>/bookmarks" class="btn btn-sm btn-dark">Bookmarks</a>
+        <a href="/advisors/<%= a.id %>/recent-views" class="btn btn-sm btn-outline-dark">Recent Views</a>
+      </div>
+    </div>
+  </div>
+  <% }) %>
+</div>
+
+<%- include('layout/footer') %>
