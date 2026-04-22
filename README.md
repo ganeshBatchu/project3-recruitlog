@@ -10,7 +10,7 @@ This project extends the MongoDB-based Project 2 by introducing a **Redis in-mem
 
 ## Video Demo
 
-*[Video link to be added here before final submission.]*
+[Watch the demo video](https://github.com/ganeshBatchu/project3-recruitlog/blob/main/RecruitLogProj3.mp4)
 
 ---
 
